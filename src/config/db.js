@@ -6,10 +6,10 @@ const connectDB = async () => {
         const options = {
             retryWrites: true,
             w: 'majority',
-            serverSelectionTimeoutMS: 5000,
-            // Opciones SSL adicionales para compatibilidad
+            serverSelectionTimeoutMS: 10000,
+            // Opciones SSL adicionales para compatibilidad con Fedora/OpenSSL 3.x
             tls: true,
-            tlsAllowInvalidCertificates: false,
+            tlsAllowInvalidCertificates: true, // Permitir certificados inválidos (solo desarrollo)
             tlsAllowInvalidHostnames: false,
         };
 

@@ -1,13 +1,15 @@
 import Juego from '../models/Juego.js';
 import fetch from 'node-fetch';
 
-// @desc    Obtener todos los juegos del usuario autenticado
+// @desc    Obtener todos los juegos (público) o del usuario (privado)
 // @route   GET /api/juegos
-// @access  Privado
+// @access  Público (catálogo) o Privado (biblioteca personal)
 export const obtenerJuegos = async (req, res) => {
     try{
-        // Solo obtener juegos del usuario autenticado
-        const juegos = await Juego.find({ usuario: req.usuario.id }).sort({ createdAt: -1 });
+        // Si hay usuario autenticado, obtener solo sus juegos
+        // Si no hay usuario, obtener todos los juegos (catálogo público)
+        const filtro = req.usuario ? { usuario: req.usuario.id } : {};
+        const juegos = await Juego.find(filtro).sort({ createdAt: -1 });
         res.json(juegos);
     }catch(error){
         console.error("Error al obtener juegos:", error);

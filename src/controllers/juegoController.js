@@ -9,7 +9,15 @@ export const obtenerJuegos = async (req, res) => {
         // Si hay usuario autenticado, obtener solo sus juegos
         // Si no hay usuario, obtener todos los juegos (catálogo público)
         const filtro = req.usuario ? { usuario: req.usuario.id } : {};
+        
+        console.log('🔍 Obteniendo juegos...');
+        console.log('👤 Usuario autenticado:', req.usuario ? req.usuario.id : 'No autenticado');
+        console.log('🔎 Filtro aplicado:', JSON.stringify(filtro));
+        
         const juegos = await Juego.find(filtro).sort({ createdAt: -1 });
+        
+        console.log('✅ Juegos encontrados:', juegos.length);
+        
         res.json(juegos);
     }catch(error){
         console.error("Error al obtener juegos:", error);
@@ -163,6 +171,73 @@ export const buscarJuegos = async (req, res) => {
         console.error("Error al buscar juegos en RAWG:", error);
         res.status(500).json({ 
             mensaje: "Error al buscar juegos", 
+            error: error.message 
+        });
+    }
+};
+
+// @desc    Obtener juegos del catálogo por categoría desde RAWG
+// @route   GET /api/juegos/catalogo/:categoria
+// @access  Público
+export const obtenerJuegosCatalogo = async (req, res) => {
+    try {
+        const { categoria } = req.params;
+        const RAWG_KEY = process.env.RAWG_KEY;
+        
+        if (!RAWG_KEY) {
+            return res.status(500).json({ mensaje: "API Key de RAWG no configurada" });
+        }
+
+        // Mapeo de categorías a géneros/filtros de RAWG
+        const categoriasMap = {
+            'populares': { ordering: '-rating', page_size: 12 },
+            'accion': { genres: 'action', page_size: 12 },
+            'aventura': { genres: 'adventure', page_size: 12 },
+            'estrategia': { genres: 'strategy', page_size: 12 },
+            'rpg': { genres: 'role-playing-games-rpg', page_size: 12 },
+            'deportes': { genres: 'sports', page_size: 12 },
+        };
+
+        const filtros = categoriasMap[categoria.toLowerCase()];
+        
+        if (!filtros) {
+            return res.status(400).json({ mensaje: "Categoría no válida" });
+        }
+
+        // Construir URL de RAWG
+        let url = `https://api.rawg.io/api/games?key=${RAWG_KEY}`;
+        if (filtros.genres) {
+            url += `&genres=${filtros.genres}`;
+        }
+        if (filtros.ordering) {
+            url += `&ordering=${filtros.ordering}`;
+        }
+        url += `&page_size=${filtros.page_size}`;
+
+        const respuesta = await fetch(url);
+        
+        if (!respuesta.ok) {
+            throw new Error(`RAWG API respondió con status ${respuesta.status}`);
+        }
+
+        const data = await respuesta.json();
+
+        // Mapear resultados
+        const juegos = data.results.map(juego => ({
+            id: juego.id,
+            titulo: juego.name,
+            imagen: juego.background_image || "",
+            rating: juego.rating || 0,
+            fechaLanzamiento: juego.released || "",
+            plataformas: juego.platforms?.map(p => p.platform.name).slice(0, 3).join(", ") || "",
+            generos: juego.genres?.map(g => g.name).join(", ") || "",
+        }));
+
+        res.json(juegos);
+    } catch (error) {
+        console.error(`Error al obtener juegos de catálogo ${req.params.categoria}:`, error);
+        res.status(500).json({ 
+            mensaje: "Error al obtener juegos del catálogo", 
             error: error.message 
         });
     }

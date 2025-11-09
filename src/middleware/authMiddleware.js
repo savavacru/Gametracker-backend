@@ -106,3 +106,37 @@ export const verificarSesion = async (req, res, next) => {
     });
   }
 };
+
+// Middleware opcional: agrega usuario si hay token válido, pero continúa sin error si no hay
+export const verificarTokenOpcional = async (req, res, next) => {
+  try {
+    const token = req.cookies.token;
+
+    if (!token) {
+      // No hay token, continuar sin usuario
+      return next();
+    }
+
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET || "secreto_super_seguro"
+    );
+
+    const usuario = await Usuario.findById(decoded.id).select("-password");
+
+    if (usuario) {
+      // Agregar usuario a la petición
+      req.usuario = {
+        id: usuario._id,
+        nombre: usuario.nombre,
+        email: usuario.email,
+      };
+    }
+
+    next();
+  } catch (error) {
+    // Si hay error, simplemente continuar sin usuario
+    console.log("Token inválido o expirado, continuando sin autenticación");
+    next();
+  }
+};

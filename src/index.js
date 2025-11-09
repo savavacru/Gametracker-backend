@@ -19,9 +19,11 @@ const allowedOrigins = [
   'https://savavacru.github.io',
   'https://gametracker-ruddy.vercel.app'
 ].filter(Boolean); // Filtrar valores undefined
+console.log("🔍 CORS - Orígenes permitidos:", allowedOrigins);
 
 app.use(cors({
   origin: function (origin, callback) {
+    console.log("🌐 Solicitud desde origen:", origin);
     // Permitir requests sin origin (como apps móviles o Postman)
     if (!origin) return callback(null, true);
     

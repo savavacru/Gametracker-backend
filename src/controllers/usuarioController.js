@@ -71,6 +71,10 @@ export const registrarUsuario = async (req, res) => {
 // @access  Público
 export const loginUsuario = async (req, res) => {
   try {
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🔐 INICIO DE SESIÓN');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    
     const { email, password } = req.body;
 
     // Validar que los campos estén presentes
@@ -80,24 +84,37 @@ export const loginUsuario = async (req, res) => {
       });
     }
 
+    console.log('📧 Email recibido:', email);
+
     // Buscar el usuario por email
     const usuario = await Usuario.findOne({ email });
     if (!usuario) {
+      console.log('❌ Usuario no encontrado');
       return res.status(401).json({
         mensaje: "Credenciales inválidas",
       });
     }
+
+    console.log('✅ Usuario encontrado:', {
+      id: usuario._id,
+      nombre: usuario.nombre,
+      email: usuario.email
+    });
 
     // Verificar la contraseña
     const passwordCorrecto = await usuario.compararPassword(password);
     if (!passwordCorrecto) {
+      console.log('❌ Contraseña incorrecta');
       return res.status(401).json({
         mensaje: "Credenciales inválidas",
       });
     }
 
+    console.log('✅ Contraseña correcta');
+
     // Generar token JWT
     const token = generarToken(usuario._id);
+    console.log('🎫 Token generado:', token.substring(0, 20) + '...');
 
     // Enviar cookie con el token
     res.cookie("token", token, {
@@ -106,6 +123,9 @@ export const loginUsuario = async (req, res) => {
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 2 * 60 * 60 * 1000, // 2 horas
     });
+
+    console.log('🍪 Cookie "token" establecida');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
     // Responder con los datos del usuario
     res.status(200).json({
@@ -117,7 +137,7 @@ export const loginUsuario = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Error en loginUsuario:", error);
+    console.error("❌ Error en loginUsuario:", error);
     res.status(500).json({
       mensaje: "Error al hacer login",
       error: error.message,

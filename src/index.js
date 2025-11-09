@@ -12,8 +12,24 @@ const app = express();
 
 // Middlewares
 // Configuración de CORS para permitir cookies desde el frontend
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:5173',
+  process.env.FRONTEND_URL,
+  'https://savavacru.github.io'
+].filter(Boolean); // Filtrar valores undefined
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || "http://localhost:3000", // URL del frontend
+  origin: function (origin, callback) {
+    // Permitir requests sin origin (como apps móviles o Postman)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'La política de CORS no permite el acceso desde este origen.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
   credentials: true, // Permitir envío de cookies
 }));
 

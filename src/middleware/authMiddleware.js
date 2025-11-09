@@ -112,8 +112,11 @@ export const verificarTokenOpcional = async (req, res, next) => {
   try {
     const token = req.cookies.token;
 
+    console.log('🔐 [verificarTokenOpcional] Token recibido:', token ? token.substring(0, 20) + '...' : 'NO HAY TOKEN');
+
     if (!token) {
       // No hay token, continuar sin usuario
+      console.log('⚠️  [verificarTokenOpcional] Sin token, continuando sin autenticación');
       return next();
     }
 
@@ -121,6 +124,8 @@ export const verificarTokenOpcional = async (req, res, next) => {
       token,
       process.env.JWT_SECRET || "secreto_super_seguro"
     );
+
+    console.log('🔓 [verificarTokenOpcional] Token decodificado:', JSON.stringify(decoded, null, 2));
 
     const usuario = await Usuario.findById(decoded.id).select("-password");
 
@@ -131,12 +136,16 @@ export const verificarTokenOpcional = async (req, res, next) => {
         nombre: usuario.nombre,
         email: usuario.email,
       };
+      console.log('✅ [verificarTokenOpcional] Usuario establecido en req.usuario:', JSON.stringify(req.usuario, null, 2));
+    } else {
+      console.log('⚠️  [verificarTokenOpcional] Usuario no encontrado en BD');
     }
 
     next();
   } catch (error) {
     // Si hay error, simplemente continuar sin usuario
-    console.log("Token inválido o expirado, continuando sin autenticación");
+    console.log('❌ [verificarTokenOpcional] Error:', error.message);
+    console.log('⚠️  [verificarTokenOpcional] Continuando sin autenticación');
     next();
   }
 };

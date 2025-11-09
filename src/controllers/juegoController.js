@@ -6,21 +6,32 @@ import fetch from 'node-fetch';
 // @access  Público (catálogo) o Privado (biblioteca personal)
 export const obtenerJuegos = async (req, res) => {
     try{
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('🔍 OBTENIENDO JUEGOS');
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('🍪 Cookies recibidas:', req.cookies);
+        console.log('👤 req.usuario:', req.usuario ? JSON.stringify(req.usuario, null, 2) : 'NO AUTENTICADO');
+        
         // Si hay usuario autenticado, obtener solo sus juegos
         // Si no hay usuario, obtener todos los juegos (catálogo público)
         const filtro = req.usuario ? { usuario: req.usuario.id } : {};
         
-        console.log('🔍 Obteniendo juegos...');
-        console.log('👤 Usuario autenticado:', req.usuario ? req.usuario.id : 'No autenticado');
-        console.log('🔎 Filtro aplicado:', JSON.stringify(filtro));
+        console.log('� Filtro que se aplicará:', JSON.stringify(filtro));
         
         const juegos = await Juego.find(filtro).sort({ createdAt: -1 });
         
         console.log('✅ Juegos encontrados:', juegos.length);
+        if (juegos.length > 0) {
+            console.log('📋 Lista de juegos:');
+            juegos.forEach((j, idx) => {
+                console.log(`   ${idx + 1}. "${j.titulo}" - Usuario: ${j.usuario}`);
+            });
+        }
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
         
         res.json(juegos);
     }catch(error){
-        console.error("Error al obtener juegos:", error);
+        console.error("❌ Error al obtener juegos:", error);
         res.status(500).json({mensaje: "Error al obtener los juegos"})
     }
 };
@@ -30,8 +41,11 @@ export const obtenerJuegos = async (req, res) => {
 // @access  Privado
 export const agregarJuego = async (req, res) => {
     try{
-        console.log('📝 Agregando juego para usuario:', req.usuario.id);
-        console.log('📦 Datos recibidos:', req.body);
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('📝 AGREGANDO NUEVO JUEGO');
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('👤 Usuario desde req.usuario:', JSON.stringify(req.usuario, null, 2));
+        console.log('📦 Datos del juego recibidos:', JSON.stringify(req.body, null, 2));
         
         // Agregar el ID del usuario al juego
         const nuevoJuego = new Juego({
@@ -39,12 +53,23 @@ export const agregarJuego = async (req, res) => {
             usuario: req.usuario.id, // Asignar el usuario autenticado
         });
         
+        console.log('🔧 Juego antes de guardar:', JSON.stringify({
+            titulo: nuevoJuego.titulo,
+            usuario: nuevoJuego.usuario,
+            genero: nuevoJuego.genero
+        }, null, 2));
+        
         const guardado = await nuevoJuego.save();
-        console.log('✅ Juego guardado con ID:', guardado._id, 'Usuario:', guardado.usuario);
+        
+        console.log('✅ Juego guardado exitosamente:');
+        console.log('   - ID del juego:', guardado._id);
+        console.log('   - Usuario asignado:', guardado.usuario);
+        console.log('   - Título:', guardado.titulo);
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
         
         res.status(201).json(guardado);
     }catch(error){
-        console.error("Error al agregar juego:", error);
+        console.error("❌ Error al agregar juego:", error);
         res.status(500).json({mensaje: "Error al agregar el juego"})
     }
 };

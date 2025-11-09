@@ -16,7 +16,8 @@ const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:5173',
   process.env.FRONTEND_URL,
-  'https://savavacru.github.io'
+  'https://savavacru.github.io',
+  'https://gametracker-ruddy.vercel.app'
 ].filter(Boolean); // Filtrar valores undefined
 
 app.use(cors({

@@ -11,16 +11,13 @@ import { verificarToken, verificarTokenOpcional } from "../middleware/authMiddle
 
 const router = express.Router();
 
-// Rutas públicas (no requieren autenticación)
-router.get("/catalogo/:categoria", obtenerJuegosCatalogo); // Catálogo por categorías desde RAWG
-router.get("/buscar/:nombre", buscarJuegos); // Búsqueda en RAWG
+router.get("/catalogo/:categoria", obtenerJuegosCatalogo);
+router.get("/buscar/:nombre", buscarJuegos);
 
-// Ruta que filtra por usuario si está autenticado, o devuelve todos si no lo está
-router.get("/", verificarTokenOpcional, obtenerJuegos); // Biblioteca personal (si está autenticado)
+router.get("/", verificarTokenOpcional, obtenerJuegos);
 
-// Rutas protegidas (requieren autenticación)
-router.post("/", verificarToken, agregarJuego); // Agregar juego a biblioteca personal
-router.put("/:id", verificarToken, actualizarJuego); // Editar juego de biblioteca personal
-router.delete("/:id", verificarToken, eliminarJuego); // Eliminar juego de biblioteca personal
+router.post("/", verificarToken, agregarJuego);
+router.put("/:id", verificarToken, actualizarJuego);
+router.delete("/:id", verificarToken, eliminarJuego);
 
 export default router;

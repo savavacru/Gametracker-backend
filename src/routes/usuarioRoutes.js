@@ -9,14 +9,12 @@ import { verificarToken, verificarSesion } from "../middleware/authMiddleware.js
 
 const router = express.Router();
 
-// Rutas públicas (no requieren autenticación)
-router.post("/register", registrarUsuario); // POST /api/auth/register
-router.post("/registro", registrarUsuario); // Alias español
-router.post("/login", loginUsuario); // POST /api/auth/login
+router.post("/register", registrarUsuario);
+router.post("/registro", registrarUsuario);
+router.post("/login", loginUsuario);
 
-// Rutas privadas (requieren autenticación)
-router.post("/logout", verificarToken, logoutUsuario); // POST /api/auth/logout
-router.get("/perfil", verificarToken, obtenerPerfil); // GET /api/auth/perfil o /api/usuarios/perfil
-router.get("/verificar", verificarSesion, obtenerPerfil); // GET /api/auth/verificar (usa middleware especial)
+router.post("/logout", verificarToken, logoutUsuario);
+router.get("/perfil", verificarToken, obtenerPerfil);
+router.get("/verificar", verificarSesion, obtenerPerfil);
 
 export default router;

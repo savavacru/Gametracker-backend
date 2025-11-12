@@ -1,108 +1,46 @@
 import Juego from '../models/Juego.js';
 import fetch from 'node-fetch';
 
-// @desc    Obtener todos los juegos (público) o del usuario (privado)
-// @route   GET /api/juegos
-// @access  Público (catálogo) o Privado (biblioteca personal)
 export const obtenerJuegos = async (req, res) => {
     try{
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        console.log('🔍 OBTENIENDO JUEGOS');
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        console.log('🍪 Cookies recibidas:', req.cookies);
-        console.log('👤 req.usuario:', req.usuario ? JSON.stringify(req.usuario, null, 2) : 'NO AUTENTICADO');
-        
-        // Si hay usuario autenticado, obtener solo sus juegos
-        // Si no hay usuario, obtener todos los juegos (catálogo público)
         const filtro = req.usuario ? { usuario: req.usuario.id } : {};
-        
-        console.log('� Filtro que se aplicará:', JSON.stringify(filtro));
-        
         const juegos = await Juego.find(filtro).sort({ createdAt: -1 });
-        
-        console.log('✅ Juegos encontrados:', juegos.length);
-        if (juegos.length > 0) {
-            console.log('📋 Lista de juegos:');
-            juegos.forEach((j, idx) => {
-                console.log(`   ${idx + 1}. "${j.titulo}" - Usuario: ${j.usuario}`);
-            });
-        }
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
-        
         res.json(juegos);
     }catch(error){
-        console.error("❌ Error al obtener juegos:", error);
+        console.error("Error al obtener juegos:", error);
         res.status(500).json({mensaje: "Error al obtener los juegos"})
     }
 };
 
-// @desc    Agregar un nuevo juego
-// @route   POST /api/juegos
-// @access  Privado
 export const agregarJuego = async (req, res) => {
     try{
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        console.log('📝 AGREGANDO NUEVO JUEGO');
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        console.log('👤 Usuario desde req.usuario:', JSON.stringify(req.usuario, null, 2));
-        console.log('📦 Datos del juego recibidos:', JSON.stringify(req.body, null, 2));
-        
-        // Agregar el ID del usuario al juego
         const nuevoJuego = new Juego({
             ...req.body,
-            usuario: req.usuario.id, // Asignar el usuario autenticado
+            usuario: req.usuario.id,
         });
         
-        console.log('🔧 Juego antes de guardar:', JSON.stringify({
-            titulo: nuevoJuego.titulo,
-            usuario: nuevoJuego.usuario,
-            genero: nuevoJuego.genero
-        }, null, 2));
-        
         const guardado = await nuevoJuego.save();
-        
-        console.log('✅ Juego guardado exitosamente:');
-        console.log('   - ID del juego:', guardado._id);
-        console.log('   - Usuario asignado:', guardado.usuario);
-        console.log('   - Título:', guardado.titulo);
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
-        
         res.status(201).json(guardado);
     }catch(error){
-        console.error("❌ Error al agregar juego:", error);
+        console.error("Error al agregar juego:", error);
         res.status(500).json({mensaje: "Error al agregar el juego"})
     }
 };
 
-// @desc    Actualizar un juego
-// @route   PUT /api/juegos/:id
-// @access  Privado
 export const actualizarJuego = async (req, res) => {
     try{
-        console.log('✏️ Intentando editar juego ID:', req.params.id);
-        console.log('👤 Usuario actual:', req.usuario.id.toString());
-        
-        // Buscar el juego
         const juego = await Juego.findById(req.params.id);
         
         if (!juego) {
-            console.log('❌ Juego no encontrado');
             return res.status(404).json({ mensaje: "Juego no encontrado" });
         }
 
-        console.log('🎮 Juego encontrado. Usuario propietario:', juego.usuario.toString());
-        
-        // Verificar que el juego pertenezca al usuario autenticado
         if (juego.usuario.toString() !== req.usuario.id.toString()) {
-            console.log('🚫 PERMISO DENEGADO. Usuario del juego:', juego.usuario.toString(), 'vs Usuario actual:', req.usuario.id.toString());
             return res.status(403).json({ 
                 mensaje: "No tienes permiso para actualizar este juego" 
             });
         }
-
-        console.log('✅ Permiso concedido. Actualizando...');
         
-        // Actualizar el juego
         const juegoActualizado = await Juego.findByIdAndUpdate(
             req.params.id, 
             req.body, 
@@ -115,33 +53,19 @@ export const actualizarJuego = async (req, res) => {
     }
 };
 
-// @desc    Eliminar un juego
-// @route   DELETE /api/juegos/:id
-// @access  Privado
 export const eliminarJuego = async (req, res) => {
     try{
-        console.log('🗑️ Intentando eliminar juego ID:', req.params.id);
-        console.log('👤 Usuario actual:', req.usuario.id.toString());
-        
-        // Buscar el juego
         const juego = await Juego.findById(req.params.id);
         
         if (!juego) {
-            console.log('❌ Juego no encontrado');
             return res.status(404).json({ mensaje: "Juego no encontrado" });
         }
 
-        console.log('🎮 Juego encontrado. Usuario propietario:', juego.usuario.toString());
-
-        // Verificar que el juego pertenezca al usuario autenticado
         if (juego.usuario.toString() !== req.usuario.id.toString()) {
-            console.log('🚫 PERMISO DENEGADO. Usuario del juego:', juego.usuario.toString(), 'vs Usuario actual:', req.usuario.id.toString());
             return res.status(403).json({ 
                 mensaje: "No tienes permiso para eliminar este juego" 
             });
         }
-
-        console.log('✅ Permiso concedido. Eliminando...');
 
         await Juego.findByIdAndDelete(req.params.id);
         res.json({ mensaje: "El juego se eliminó correctamente" });
@@ -151,9 +75,6 @@ export const eliminarJuego = async (req, res) => {
     }
 };
 
-// @desc    Buscar juegos en RAWG API
-// @route   GET /api/juegos/buscar/:nombre
-// @access  Público (no requiere autenticación)
 export const buscarJuegos = async (req, res) => {
     try {
         const { nombre } = req.params;
@@ -168,7 +89,6 @@ export const buscarJuegos = async (req, res) => {
             return res.status(500).json({ mensaje: "API Key de RAWG no configurada" });
         }
 
-        // Hacer petición a RAWG API
         const respuesta = await fetch(
             `https://api.rawg.io/api/games?key=${RAWG_KEY}&search=${encodeURIComponent(nombre)}&page_size=10`
         );
@@ -179,7 +99,6 @@ export const buscarJuegos = async (req, res) => {
 
         const data = await respuesta.json();
 
-        // Mapear resultados a un formato más simple
         const juegos = data.results.map(juego => ({
             id: juego.id,
             titulo: juego.name,
@@ -201,9 +120,6 @@ export const buscarJuegos = async (req, res) => {
     }
 };
 
-// @desc    Obtener juegos del catálogo por categoría desde RAWG
-// @route   GET /api/juegos/catalogo/:categoria
-// @access  Público
 export const obtenerJuegosCatalogo = async (req, res) => {
     try {
         const { categoria } = req.params;
@@ -213,7 +129,6 @@ export const obtenerJuegosCatalogo = async (req, res) => {
             return res.status(500).json({ mensaje: "API Key de RAWG no configurada" });
         }
 
-        // Mapeo de categorías a géneros/filtros de RAWG
         const categoriasMap = {
             'populares': { ordering: '-rating', page_size: 12 },
             'accion': { genres: 'action', page_size: 12 },
@@ -229,7 +144,6 @@ export const obtenerJuegosCatalogo = async (req, res) => {
             return res.status(400).json({ mensaje: "Categoría no válida" });
         }
 
-        // Construir URL de RAWG
         let url = `https://api.rawg.io/api/games?key=${RAWG_KEY}`;
         if (filtros.genres) {
             url += `&genres=${filtros.genres}`;
@@ -247,7 +161,6 @@ export const obtenerJuegosCatalogo = async (req, res) => {
 
         const data = await respuesta.json();
 
-        // Mapear resultados
         const juegos = data.results.map(juego => ({
             id: juego.id,
             titulo: juego.name,

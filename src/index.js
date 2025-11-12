@@ -10,21 +10,16 @@ dotenv.config();
 
 const app = express();
 
-// Middlewares
-// Configuración de CORS para permitir cookies desde el frontend
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:5173',
   process.env.FRONTEND_URL,
   'https://savavacru.github.io',
   'https://gametracker-ruddy.vercel.app'
-].filter(Boolean); // Filtrar valores undefined
-console.log("🔍 CORS - Orígenes permitidos:", allowedOrigins);
+].filter(Boolean);
 
 app.use(cors({
   origin: function (origin, callback) {
-    console.log("🌐 Solicitud desde origen:", origin);
-    // Permitir requests sin origin (como apps móviles o Postman)
     if (!origin) return callback(null, true);
     
     if (allowedOrigins.indexOf(origin) === -1) {
@@ -33,26 +28,22 @@ app.use(cors({
     }
     return callback(null, true);
   },
-  credentials: true, // Permitir envío de cookies
+  credentials: true,
 }));
 
-app.use(express.json()); // Para parsear JSON
-app.use(cookieParser()); // Para parsear cookies
+app.use(express.json());
+app.use(cookieParser());
 
-// Conexión a la base de datos
 connectDB();
 
-// Rutas
 app.use("/api/juegos", juegoRoutes);
-app.use("/api/usuarios", usuarioRoutes); // Rutas originales
-app.use("/api/auth", usuarioRoutes); // Alias para compatibilidad con frontend
+app.use("/api/usuarios", usuarioRoutes);
+app.use("/api/auth", usuarioRoutes);
 
-// Ruta de prueba
 app.get("/", (req, res) => {
   res.json({ mensaje: "API de GameTracker funcionando correctamente" });
 });
 
-// Puerto
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`Servidor ejecutándose en puerto ${PORT}`);
